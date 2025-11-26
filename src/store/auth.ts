@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import type { Session, User } from "@supabase/supabase-js";
 import supabase from "@/lib/supabase";
-import type { Database } from "@/database.types";
+import type { Tables } from "@/types";
 
 interface AuthState {
   session: Session | null;
   user: User | null;
-  profile: Database["public"]["Tables"]["profiles"]["Row"] | null;
+  profile: Tables<"profiles"> | null;
   isLoading: boolean;
   initializeAuth: () => Promise<void>;
   signInAnonymously: () => Promise<void>;
