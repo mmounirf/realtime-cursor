@@ -4,8 +4,7 @@ import supabase from "@/lib/supabase";
 
 interface AppState {
   authLoading: boolean;
-  captchaToken: string | null;
-  setCaptchaToken: (token: string) => void;
+
   auth: Session | null;
   initializeAuth: () => Promise<void>;
   joinRoom: (name: string) => Promise<string>;
@@ -14,12 +13,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   authLoading: true,
-  captchaToken: null,
   auth: null,
-
-  setCaptchaToken: async (token) => {
-    set({ captchaToken: token });
-  },
 
   initializeAuth: async () => {
     set({ authLoading: true });
@@ -39,13 +33,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   joinRoom: async (name: string) => {
-    const { captchaToken } = get();
-
-    if (!captchaToken) {
-      throw { message: "Captcha verification failed" };
-    }
     const { data, error } = await supabase.auth.signInAnonymously({
-      options: { captchaToken, data: { display_name: name } },
+      options: { data: { display_name: name } },
     });
 
     if (error) {

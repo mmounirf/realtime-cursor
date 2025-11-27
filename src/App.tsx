@@ -4,10 +4,9 @@ import WelcomeScreen from "./screens/WelcomeScreen";
 import RealtimeScreen from "./screens/RealtimeScreen";
 import { useAppStore } from "./store/app";
 import { useEffect } from "react";
-import { Turnstile } from "@marsidev/react-turnstile";
 
 function App() {
-  const { initializeAuth, setCaptchaToken } = useAppStore();
+  const { initializeAuth } = useAppStore();
 
   useEffect(() => {
     initializeAuth();
@@ -26,10 +25,6 @@ function App() {
 
         <Route path="*" element={<Navigate to="/welcome" />} />
       </Routes>
-      <Turnstile
-        siteKey={import.meta.env.VITE_CLOUDFLARE_TURNSTILE_SITE_KEY}
-        onSuccess={setCaptchaToken}
-      />
     </div>
   );
 }
