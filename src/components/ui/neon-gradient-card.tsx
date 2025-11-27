@@ -1,7 +1,7 @@
 import {
-  CSSProperties,
-  ReactElement,
-  ReactNode,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
   useEffect,
   useRef,
   useState,
