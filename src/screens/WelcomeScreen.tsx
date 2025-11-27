@@ -27,7 +27,7 @@ export default function WelcomeScreen() {
       toast
         .promise(joinRoom(inputValue), {
           loading: "Joining room...",
-          error: "Error joining room",
+          error: ({ message }) => message,
           success: (name) => {
             return `Welcome ${name}`;
           },

@@ -42,7 +42,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { captchaToken } = get();
 
     if (!captchaToken) {
-      throw new Error("Captcha verification failed");
+      throw { message: "Captcha verification failed" };
     }
     const { data, error } = await supabase.auth.signInAnonymously({
       options: { captchaToken, data: { display_name: name } },
