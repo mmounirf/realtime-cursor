@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Session, User } from "@supabase/supabase-js";
+import type { AuthResponse, Session, User } from "@supabase/supabase-js";
 import supabase from "@/lib/supabase";
 import type { Tables } from "@/types";
 
@@ -9,7 +9,7 @@ interface AuthState {
   profile: Tables<"profiles"> | null;
   isLoading: boolean;
   initializeAuth: () => Promise<void>;
-  signInAnonymously: () => Promise<void>;
+  signInAnonymously: () => Promise<AuthResponse>;
   updateUsername: (newUsername: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -55,12 +55,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInAnonymously: async () => {
-    set({ isLoading: true });
-    const { error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      console.error("Login failed:", error.message);
-      set({ isLoading: false });
+    const response = await supabase.auth.signInAnonymously();
+    if (response.error) {
+      throw response.error;
     }
+    return response;
   },
 
   updateUsername: async (newUsername: string) => {
