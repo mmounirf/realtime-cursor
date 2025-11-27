@@ -1,16 +1,16 @@
 import { Navigate, Outlet, useLocation } from "react-router";
-import { useAuthStore } from "./store/auth";
+import { useAppStore } from "./store/app";
 import { Spinner } from "./components/ui/spinner";
 
 export const ProtectedRoute = () => {
-  const { session, isLoading } = useAuthStore();
+  const { auth, authLoading } = useAppStore();
   const location = useLocation();
 
-  if (isLoading) {
+  if (authLoading) {
     return <Spinner />;
   }
 
-  if (!session) {
+  if (!auth) {
     return <Navigate to="/welcome" state={{ from: location }} replace />;
   }
 
@@ -18,13 +18,13 @@ export const ProtectedRoute = () => {
 };
 
 export const PublicRoute = () => {
-  const { session, isLoading } = useAuthStore();
+  const { auth, authLoading } = useAppStore();
 
-  if (isLoading) {
+  if (authLoading) {
     return <Spinner />;
   }
 
-  if (session) {
+  if (auth) {
     return <Navigate to="/realtime" replace />;
   }
 

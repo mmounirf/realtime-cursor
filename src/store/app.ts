@@ -1,0 +1,65 @@
+import { create } from "zustand";
+import type { Session, User } from "@supabase/supabase-js";
+import supabase from "@/lib/supabase";
+
+interface AppState {
+  authLoading: boolean;
+  captchaToken: string | null;
+  setCaptchaToken: (token: string) => void;
+  auth: Session | null;
+  initializeAuth: () => Promise<void>;
+  joinRoom: (name: string) => Promise<string>;
+  signOut: () => Promise<void>;
+}
+
+export const useAppStore = create<AppState>((set, get) => ({
+  authLoading: true,
+  captchaToken: null,
+  auth: null,
+
+  setCaptchaToken: async (token) => {
+    set({ captchaToken: token });
+  },
+
+  initializeAuth: async () => {
+    set({ authLoading: true });
+    const { data } = await supabase.auth.getSession();
+
+    if (data.session) {
+      set({ auth: data.session, authLoading: false });
+    }
+
+    supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        set({ auth: data.session, authLoading: false });
+      } else {
+        set({ auth: null, authLoading: false });
+      }
+    });
+  },
+
+  joinRoom: async (name: string) => {
+    const { captchaToken } = get();
+
+    if (!captchaToken) {
+      throw new Error("Captcha verification failed");
+    }
+    const { data, error } = await supabase.auth.signInAnonymously({
+      options: { captchaToken, data: { display_name: name } },
+    });
+
+    if (error) {
+      throw error;
+    } else {
+      set({ auth: data.session });
+      const name: string = data.user?.user_metadata.display_name;
+      return name;
+    }
+  },
+
+  signOut: async () => {
+    set({ authLoading: true });
+    await supabase.auth.signOut();
+    set({ auth: null, authLoading: false });
+  },
+}));

@@ -11,8 +11,34 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import { Input } from "@/components/ui/input";
 import { NeonGradientCard } from "@/components/ui/neon-gradient-card";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/app";
+import { LogInIcon } from "lucide-react";
+import { useRef } from "react";
+import { toast } from "sonner";
 
 export default function WelcomeScreen() {
+  const { joinRoom } = useAppStore();
+  const nameInput = useRef<HTMLInputElement>(null);
+
+  const onJoin = async () => {
+    const inputValue = nameInput.current?.value;
+
+    if (inputValue !== undefined && inputValue.trim().length > 0) {
+      toast
+        .promise(joinRoom(inputValue), {
+          loading: "Joining room...",
+          error: "Error joining room",
+          success: (name) => {
+            return `Welcome ${name}`;
+          },
+          id: "joinToast",
+        })
+        .unwrap();
+    } else {
+      toast.error("Name is reuqired", { id: "joinToast" });
+    }
+  };
+
   return (
     <div className="container max-w-2xl">
       <DotPattern
@@ -35,10 +61,16 @@ export default function WelcomeScreen() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col p-0">
-            <Input placeholder="Write your name" type="text" />
+            <Input
+              ref={nameInput}
+              placeholder="Write your name"
+              type="text"
+              required
+            />
           </CardContent>
-          <Button size="lg" variant="outline">
+          <Button size="lg" variant="outline" onClick={() => onJoin()}>
             Join
+            <LogInIcon />
           </Button>
         </Card>
       </NeonGradientCard>

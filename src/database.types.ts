@@ -14,66 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      photos: {
-        Row: {
-          created_at: string
-          id: string
-          url: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          url: string
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          url?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never

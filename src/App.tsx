@@ -2,12 +2,12 @@ import { Navigate, Route, Routes } from "react-router";
 import { ProtectedRoute, PublicRoute } from "./Routes";
 import WelcomeScreen from "./screens/WelcomeScreen";
 import RealtimeScreen from "./screens/RealtimeScreen";
-import { useAuthStore } from "./store/auth";
+import { useAppStore } from "./store/app";
 import { useEffect } from "react";
 import { Turnstile } from "@marsidev/react-turnstile";
 
 function App() {
-  const { initializeAuth, setCaptchaToken } = useAuthStore();
+  const { initializeAuth, setCaptchaToken } = useAppStore();
 
   useEffect(() => {
     initializeAuth();
