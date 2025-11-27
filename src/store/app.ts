@@ -11,7 +11,7 @@ interface AppState {
   signOut: () => Promise<void>;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>((set) => ({
   authLoading: true,
   auth: null,
 
