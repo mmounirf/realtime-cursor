@@ -4,6 +4,8 @@ import supabase from "@/lib/supabase";
 import type { Tables } from "@/types";
 
 interface AuthState {
+  captchaToken: string | null;
+  setCaptchaToken: (token: string) => void;
   session: Session | null;
   user: User | null;
   profile: Tables<"profiles"> | null;
@@ -15,10 +17,15 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
+  captchaToken: null,
   session: null,
   user: null,
   profile: null,
   isLoading: true,
+
+  setCaptchaToken: async (token) => {
+    set({ captchaToken: token });
+  },
 
   initializeAuth: async () => {
     set({ isLoading: true });
@@ -55,7 +62,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInAnonymously: async () => {
-    const response = await supabase.auth.signInAnonymously();
+    const { captchaToken } = get();
+    if (!captchaToken) {
+      throw "Verification failed";
+    }
+    const response = await supabase.auth.signInAnonymously({
+      options: { captchaToken },
+    });
     if (response.error) {
       throw response.error;
     }
