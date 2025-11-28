@@ -1,4 +1,4 @@
-import { channel } from "@/lib/supabase";
+import supabase from "@/lib/supabase";
 import {
   RealtimeChannel,
   REALTIME_SUBSCRIBE_STATES,
@@ -55,9 +55,16 @@ type CursorEventPayload = {
   color: string;
   timestamp: number;
 };
-const throttleMs = 50;
 
-export const useRealtimeCursors = ({ username }: { username: string }) => {
+export const useRealtimeCursors = ({
+  roomName,
+  username,
+  throttleMs,
+}: {
+  roomName: string;
+  username: string;
+  throttleMs: number;
+}) => {
   const [color] = useState(generateRandomColor());
   const [userId] = useState(generateRandomNumber());
   const [cursors, setCursors] = useState<Record<string, CursorEventPayload>>(
@@ -98,6 +105,8 @@ export const useRealtimeCursors = ({ username }: { username: string }) => {
   const handleMouseMove = useThrottleCallback(callback, throttleMs);
 
   useEffect(() => {
+    const channel = supabase.channel(roomName, { config: { private: true } });
+
     channel
       .on("presence", { event: "leave" }, ({ leftPresences }) => {
         leftPresences.forEach(function (element) {

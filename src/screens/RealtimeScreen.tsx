@@ -7,14 +7,19 @@ export default function RealtimeScreen() {
   const { signOut, auth } = useAppStore();
 
   const { cursors } = useRealtimeCursors({
+    roomName: "realtime-cursor",
     username: auth?.user.user_metadata.display_name,
+    throttleMs: 50,
   });
 
   return (
     <div>
       <Button onClick={() => signOut()}>Sign out</Button>
       {Object.keys(cursors).map((id) => (
-        <Cursor point={[cursors[id].position.x, cursors[id].position.y]} />
+        <Cursor
+          key={id}
+          point={[cursors[id].position.x, cursors[id].position.y]}
+        />
       ))}
     </div>
   );
