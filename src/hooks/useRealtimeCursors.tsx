@@ -78,10 +78,13 @@ export const useRealtimeCursors = ({
     (event: MouseEvent) => {
       const { clientX, clientY } = event;
 
+      const normalizedX = clientX / window.innerWidth;
+      const normalizedY = clientY / window.innerHeight;
+
       const payload: CursorEventPayload = {
         position: {
-          x: clientX,
-          y: clientY,
+          x: normalizedX,
+          y: normalizedY,
         },
         user: {
           id: userId,
