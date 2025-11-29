@@ -18,7 +18,12 @@ export default function RealtimeScreen() {
       {Object.keys(cursors).map((id) => (
         <Cursor
           key={id}
-          point={[cursors[id].position.x, cursors[id].position.y]}
+          color={cursors[id].color}
+          label={cursors[id].user.name}
+          point={[
+            cursors[id].position.x * window.innerWidth,
+            cursors[id].position.y * window.innerHeight,
+          ]}
         />
       ))}
     </div>

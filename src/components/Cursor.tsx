@@ -1,16 +1,34 @@
 import { usePerfectCursor } from "@/hooks/usePerfectCursor";
 import { useRef, useCallback, useLayoutEffect } from "react";
 
-export default function Cursor({ point }: { point: number[] }) {
+export default function Cursor({
+  point,
+  color,
+  label,
+}: {
+  point: number[];
+  color: string;
+  label: string;
+}) {
   const cursorRef = useRef<SVGSVGElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
 
   const animateCursor = useCallback((point: number[]) => {
     const elm = cursorRef.current;
+    const label = labelRef.current;
+
     if (!elm) return;
     elm.style.setProperty(
       "transform",
       `translate(${point[0]}px, ${point[1]}px)`
     );
+
+    if (label) {
+      label.style.setProperty(
+        "transform",
+        `translate(${point[0] + 15}px, ${point[1] + 25}px)`
+      );
+    }
   }, []);
 
   const onPointMove = usePerfectCursor(animateCursor);
@@ -18,32 +36,62 @@ export default function Cursor({ point }: { point: number[] }) {
   useLayoutEffect(() => onPointMove(point), [onPointMove, point]);
 
   return (
-    <svg
-      ref={cursorRef}
-      style={{
-        position: "absolute",
-        top: -15,
-        left: -15,
-        width: 35,
-        height: 35,
-      }}
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 35 35"
-      fill="none"
-      fillRule="evenodd"
-    >
-      <g fill="rgba(0,0,0,.2)" transform="translate(1,1)">
-        <path d="m12 24.4219v-16.015l11.591 11.619h-6.781l-.411.124z" />
-        <path d="m21.0845 25.0962-3.605 1.535-4.682-11.089 3.686-1.553z" />
-      </g>
-      <g fill="white">
-        <path d="m12 24.4219v-16.015l11.591 11.619h-6.781l-.411.124z" />
-        <path d="m21.0845 25.0962-3.605 1.535-4.682-11.089 3.686-1.553z" />
-      </g>
-      <g fill={"red"}>
-        <path d="m19.751 24.4155-1.844.774-3.1-7.374 1.841-.775z" />
-        <path d="m13 10.814v11.188l2.969-2.866.428-.139h4.768z" />
-      </g>
-    </svg>
+    <>
+      <svg
+        ref={cursorRef}
+        width="44"
+        height="56"
+        viewBox="0 0 24 36"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: 45,
+          height: 45,
+          filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.15))",
+          pointerEvents: "none",
+        }}
+      >
+        <path
+          d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
+          fill={color}
+        />
+        <path
+          d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
+          stroke="white"
+          strokeWidth="1"
+        />
+      </svg>
+
+      <div
+        ref={labelRef}
+        style={{
+          position: "fixed",
+          top: -5,
+          left: -5,
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: color,
+            color: "white",
+            padding: "4px 12px",
+            borderRadius: "9999px",
+            fontSize: "12px",
+            fontWeight: "500",
+            whiteSpace: "nowrap",
+            boxShadow: "0px 2px 4px rgba(0,0,0,0.15)",
+            maxWidth: "150px",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {label}
+        </div>
+      </div>
+    </>
   );
 }
