@@ -57,6 +57,7 @@ type CursorEventPayload = {
   timestamp: number;
 };
 
+// Helper to detect if device is mobile
 const isMobileDevice = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
@@ -80,8 +81,13 @@ export const useRealtimeCursors = ({
   const cursorPayload = useRef<CursorEventPayload | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
+  // Device orientation for mobile
   const orientation = useDeviceOrientation();
   const isMobile = useRef(isMobileDevice());
+
+  // Smoothing buffer for orientation values to reduce jitter
+  const orientationBuffer = useRef<Array<{ gamma: number; beta: number }>>([]);
+  const BUFFER_SIZE = 5; // Number of readings to average
 
   const broadcastPosition = useCallback(
     (normalizedX: number, normalizedY: number) => {
@@ -111,10 +117,12 @@ export const useRealtimeCursors = ({
 
   const throttledBroadcast = useThrottleCallback(broadcastPosition, throttleMs);
 
+  // Desktop mouse handler
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
       const { clientX, clientY } = event;
 
+      // Normalize to 0-1 range based on viewport
       const normalizedX = clientX / window.innerWidth;
       const normalizedY = clientY / window.innerHeight;
 
@@ -125,22 +133,61 @@ export const useRealtimeCursors = ({
 
   const throttledMouseMove = useThrottleCallback(handleMouseMove, throttleMs);
 
+  // Mobile motion handler
   useEffect(() => {
     if (!isMobile.current) return;
     if (orientation.gamma === null || orientation.beta === null) return;
 
-    const gamma = orientation.gamma;
-    const beta = orientation.beta;
+    // Add current reading to buffer
+    orientationBuffer.current.push({
+      gamma: orientation.gamma,
+      beta: orientation.beta,
+    });
 
-    const tiltRange = 30;
+    // Keep buffer size limited
+    if (orientationBuffer.current.length > BUFFER_SIZE) {
+      orientationBuffer.current.shift();
+    }
 
-    let normalizedX = 0.5 + (gamma / tiltRange) * 0.5;
+    // Need enough samples before calculating
+    if (orientationBuffer.current.length < BUFFER_SIZE) return;
+
+    // Calculate moving average to smooth out jitter
+    const avgGamma =
+      orientationBuffer.current.reduce((sum, r) => sum + r.gamma, 0) /
+      BUFFER_SIZE;
+    const avgBeta =
+      orientationBuffer.current.reduce((sum, r) => sum + r.beta, 0) /
+      BUFFER_SIZE;
+
+    // Apply deadzone to ignore very small movements
+    const DEADZONE = 0.5; // Ignore movements smaller than 0.5 degrees
+    const lastReading =
+      orientationBuffer.current[orientationBuffer.current.length - 2];
+
+    if (lastReading) {
+      const gammaDiff = Math.abs(avgGamma - lastReading.gamma);
+      const betaDiff = Math.abs(avgBeta - lastReading.beta);
+
+      // If movement is too small, don't update
+      if (gammaDiff < DEADZONE && betaDiff < DEADZONE) {
+        return;
+      }
+    }
+
+    // Sensitivity: how many degrees of tilt for full screen traversal
+    const tiltRange = 30; // ±30 degrees for full range
+
+    // Map gamma to x position (0 to 1)
+    let normalizedX = 0.5 + (avgGamma / tiltRange) * 0.5;
     normalizedX = Math.max(0, Math.min(1, normalizedX));
 
+    // Map beta to y position
     const betaCenter = 80;
-    let normalizedY = 0.5 + ((beta - betaCenter) / tiltRange) * 0.5;
+    let normalizedY = 0.5 + ((avgBeta - betaCenter) / tiltRange) * 0.5;
     normalizedY = Math.max(0, Math.min(1, normalizedY));
 
+    // Broadcast directly - let perfect-cursors handle smoothing
     throttledBroadcast(normalizedX, normalizedY);
   }, [orientation.gamma, orientation.beta, throttledBroadcast]);
 
@@ -173,7 +220,7 @@ export const useRealtimeCursors = ({
         { event: EVENT_NAME },
         (data: { payload: CursorEventPayload }) => {
           const { user } = data.payload;
-
+          // Don't render your own cursor
           if (user.id === userId) return;
 
           setCursors((prev) => {
@@ -204,6 +251,7 @@ export const useRealtimeCursors = ({
     };
   }, [roomName, userId]);
 
+  // Only add mouse listener on desktop
   useEffect(() => {
     if (isMobile.current) return;
 
