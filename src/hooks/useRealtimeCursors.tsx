@@ -83,10 +83,6 @@ export const useRealtimeCursors = ({
   const orientation = useDeviceOrientation();
   const isMobile = useRef(isMobileDevice());
 
-  const mobilePosition = useRef({ x: 0.5, y: 0.5 });
-
-  const calibration = useRef<{ gamma: number; beta: number } | null>(null);
-
   const broadcastPosition = useCallback(
     (normalizedX: number, normalizedY: number) => {
       const payload: CursorEventPayload = {
@@ -113,6 +109,8 @@ export const useRealtimeCursors = ({
     [color, userId, username]
   );
 
+  const throttledBroadcast = useThrottleCallback(broadcastPosition, throttleMs);
+
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
       const { clientX, clientY } = event;
@@ -131,29 +129,20 @@ export const useRealtimeCursors = ({
     if (!isMobile.current) return;
     if (orientation.gamma === null || orientation.beta === null) return;
 
-    if (!calibration.current) {
-      calibration.current = {
-        gamma: orientation.gamma,
-        beta: orientation.beta,
-      };
-      return;
-    }
+    const gamma = orientation.gamma;
+    const beta = orientation.beta;
 
-    const deltaGamma = orientation.gamma - calibration.current.gamma;
-    const deltaBeta = orientation.beta - calibration.current.beta;
+    const tiltRange = 30;
 
-    const sensitivity = 30;
+    let normalizedX = 0.5 + (gamma / tiltRange) * 0.5;
+    normalizedX = Math.max(0, Math.min(1, normalizedX));
 
-    const deltaX = deltaGamma / sensitivity;
-    const deltaY = deltaBeta / sensitivity;
+    const betaCenter = 80;
+    let normalizedY = 0.5 + ((beta - betaCenter) / tiltRange) * 0.5;
+    normalizedY = Math.max(0, Math.min(1, normalizedY));
 
-    mobilePosition.current = {
-      x: Math.max(0, Math.min(1, mobilePosition.current.x + deltaX)),
-      y: Math.max(0, Math.min(1, mobilePosition.current.y + deltaY)),
-    };
-
-    broadcastPosition(mobilePosition.current.x, mobilePosition.current.y);
-  }, [orientation.gamma, orientation.beta, broadcastPosition]);
+    throttledBroadcast(normalizedX, normalizedY);
+  }, [orientation.gamma, orientation.beta, throttledBroadcast]);
 
   useEffect(() => {
     const channel = supabase.channel(roomName, { config: { private: true } });
@@ -184,6 +173,7 @@ export const useRealtimeCursors = ({
         { event: EVENT_NAME },
         (data: { payload: CursorEventPayload }) => {
           const { user } = data.payload;
+
           if (user.id === userId) return;
 
           setCursors((prev) => {
