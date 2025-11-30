@@ -179,7 +179,9 @@ export const useRealtimeCursors = ({
     const tiltRange = 30; // ±30 degrees for full range
 
     // Map gamma to x position (0 to 1)
-    let normalizedX = 0.5 + (avgGamma / tiltRange) * 0.5;
+    // Reverse the direction: when you tilt/point device LEFT (negative gamma), cursor goes LEFT
+    // When you tilt/point device RIGHT (positive gamma), cursor goes RIGHT
+    let normalizedX = 0.5 - (avgGamma / tiltRange) * 0.5;
     normalizedX = Math.max(0, Math.min(1, normalizedX));
 
     // Map beta to y position
