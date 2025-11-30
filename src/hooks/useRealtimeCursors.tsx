@@ -185,8 +185,10 @@ export const useRealtimeCursors = ({
     normalizedX = Math.max(0, Math.min(1, normalizedX));
 
     // Map beta to y position
+    // Reverse the direction: when you tilt/point device UP (backward, negative beta), cursor goes UP
+    // When you tilt/point device DOWN (forward, positive beta), cursor goes DOWN
     const betaCenter = 80;
-    let normalizedY = 0.5 + ((avgBeta - betaCenter) / tiltRange) * 0.5;
+    let normalizedY = 0.5 - ((avgBeta - betaCenter) / tiltRange) * 0.5;
     normalizedY = Math.max(0, Math.min(1, normalizedY));
 
     // Broadcast directly - let perfect-cursors handle smoothing
